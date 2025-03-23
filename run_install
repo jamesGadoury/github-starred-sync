@@ -1,0 +1,12 @@
+#!/bin/bash
+mkdir -p ~/.local/bin
+cp .local/bin/github_sync_starred_repos.py ~/.local/bin/
+chmod +x ~/.local/bin/github_sync_starred_repos.py
+
+mkdir -p ~/.config/systemd/user
+cp systemd/github-starred-sync.* ~/.config/systemd/user/
+
+systemctl --user daemon-reload
+systemctl --user enable --now github-starred-sync.timer
+
+echo "Installed and enabled systemd timer for github star sync processes."

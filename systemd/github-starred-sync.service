@@ -1,0 +1,7 @@
+[Unit]
+Description=GitHub Starred Repo Sync
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/github_sync_starred_repos.py
+EnvironmentFile=%h/.config/github-starred-sync/env
