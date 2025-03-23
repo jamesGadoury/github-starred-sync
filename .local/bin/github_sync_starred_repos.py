@@ -10,23 +10,22 @@ import requests
 GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 DEST_DIR = os.path.expanduser(os.getenv("GITHUB_STARRED_DEST", "~/starred_repos"))
-LOG_FILE = os.path.expanduser("~/starred_repo_sync.log")
 # ======================
 
 # === LOGGING SETUP ===
-logging.basicConfig(
-    filename=LOG_FILE,
-    filemode="a",
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_format = logging.Formatter("[%(levelname)s] %(message)s")
+console_handler.setFormatter(console_format)
+logger.addHandler(console_handler)
 # =======================
 
 
 def log_and_print(msg, level="info"):
-    print(msg)
-    getattr(logging, level)(msg)
+    getattr(logger, level)(msg)
 
 
 def get_starred_repos(username, token):
@@ -60,10 +59,10 @@ def run_git_command(args, cwd):
             text=True,
             check=True,
         )
-        logging.debug(f"Ran command: {' '.join(args)}\n{result.stdout}")
+        logger.debug(f"Ran command: {' '.join(args)}\n{result.stdout}")
         return result.stdout
     except subprocess.CalledProcessError as e:
-        logging.error(f"Error running {' '.join(args)} in {cwd}:\n{e.stderr}")
+        logger.error(f"Error running {' '.join(args)} in {cwd}:\n{e.stderr}")
         return None
 
 
@@ -72,12 +71,13 @@ def clone_repo(clone_url, repo_name):
     return run_git_command(["git", "clone", clone_url], cwd=DEST_DIR)
 
 
-def pull_repo(repo_path):
-    log_and_print(f"Pulling latest changes in: {repo_path}")
+def pull_repo(repo_path, repo_name):
+    log_and_print(f"Pulling latest changes for repo: {repo_name}")
     run_git_command(["git", "fetch", "--all"], cwd=repo_path)
 
     branches_output = run_git_command(["git", "branch", "-r"], cwd=repo_path)
     if not branches_output:
+        log_and_print(f"No remote branches found for {repo_name}", level="warning")
         return
 
     remote_branches = [
@@ -93,7 +93,7 @@ def pull_repo(repo_path):
     branches_to_pull.extend([b for b in remote_branches if b.startswith("release")])
 
     for branch in set(branches_to_pull):
-        log_and_print(f"Pulling branch '{branch}' in {repo_path}")
+        log_and_print(f"Checking out and pulling branch '{branch}' in {repo_name}")
         run_git_command(["git", "checkout", branch], cwd=repo_path)
         run_git_command(["git", "pull", "origin", branch], cwd=repo_path)
 
@@ -103,7 +103,8 @@ def sync_repo(repo_url, repo_name):
     if not os.path.exists(repo_path):
         clone_repo(repo_url, repo_name)
     else:
-        pull_repo(repo_path)
+        log_and_print(f"Repo already exists: {repo_name}")
+        pull_repo(repo_path, repo_name)
 
 
 def sync_starred():
@@ -112,11 +113,12 @@ def sync_starred():
         return
 
     if not GITHUB_TOKEN:
-        log_and_print("GitHub token not found in keyring.", level="error")
+        log_and_print("Environment variable GITHUB_TOKEN is not set.", level="error")
         return
 
     if not os.path.exists(DEST_DIR):
         os.makedirs(DEST_DIR)
+        log_and_print(f"Created destination directory: {DEST_DIR}")
 
     try:
         log_and_print("Starting sync of starred GitHub repos...")
@@ -125,12 +127,14 @@ def sync_starred():
         for repo in repos:
             try:
                 name = repo["name"]
+                full_name = repo["full_name"]
                 clone_url = repo["clone_url"]
+                log_and_print(f"Syncing repository: {full_name}")
                 sync_repo(clone_url, name)
             except Exception as e:
-                logging.error(f"Error syncing repo {repo.get('full_name')}: {e}")
+                logger.error(f"Error syncing repo {repo.get('full_name')}: {e}")
     except Exception as e:
-        logging.exception("Unhandled exception during sync.")
+        logger.exception("Unhandled exception during sync.")
     finally:
         log_and_print("Finished sync.")
 

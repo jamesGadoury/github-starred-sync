@@ -88,15 +88,7 @@ journalctl --user -u github-starred-sync.service
 
 ---
 
-### 6. Enable Log Rotation
-
-```bash
-sudo cp logrotate.conf /etc/logrotate.d/github-starred-sync
-```
-
----
-
-### 7. [Optional] Enable for first time:
+### 6. [Optional] Enable for first time:
 
 If you don't want to wait for the timer to run for first time, you can trigger the start the service manually:
 ```bash
