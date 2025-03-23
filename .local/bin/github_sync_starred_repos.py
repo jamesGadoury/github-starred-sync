@@ -4,13 +4,12 @@ import os
 import subprocess
 from datetime import datetime
 
-import keyring
 import requests
 
 # === CONFIGURATION ===
 GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
-GITHUB_TOKEN = keyring.get_password("github_starred_sync", "GITHUB_TOKEN")
-DEST_DIR = os.path.expanduser("~/starred_repos")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+DEST_DIR = os.path.expanduser(os.getenv("GITHUB_STARRED_DEST", "~/starred_repos"))
 LOG_FILE = os.path.expanduser("~/starred_repo_sync.log")
 # ======================
 

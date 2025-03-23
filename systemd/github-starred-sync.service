@@ -3,5 +3,7 @@ Description=GitHub Starred Repo Sync
 
 [Service]
 Type=oneshot
+# NOTE: %h is a systemd specifier that expands to home dir
 ExecStart=%h/.local/bin/github_sync_starred_repos.py
+EnvironmentFile=%h/.config/github-starred-sync/secrets.env
 EnvironmentFile=%h/.config/github-starred-sync/env
