@@ -83,7 +83,7 @@ echo 'GITHUB_STARRED_DEST=your_desired_path' >> ~/.config/github-starred-sync/en
 
 ```bash
 systemctl --user status github-starred-sync.timer
-journalctl --user -u github-starred-sync.service
+journalctl --user -u github-starred-sync.service -f
 ```
 
 ---
@@ -92,7 +92,7 @@ journalctl --user -u github-starred-sync.service
 
 If you don't want to wait for the timer to run for first time, you can trigger the start the service manually:
 ```bash
-systemctl --user start github-starred-sync.service
+systemctl --user start github-starred-sync.service --no-block
 ```
 
 ## License
