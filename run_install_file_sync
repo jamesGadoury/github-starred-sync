@@ -1,0 +1,17 @@
+#!/bin/bash
+mkdir -p ~/.local/bin
+cp .local/bin/github_sync_file_repos.py ~/.local/bin/
+chmod +x ~/.local/bin/github_sync_file_repos.py
+
+mkdir -p ~/.config/systemd/user
+cp systemd/github-repos-sync.* ~/.config/systemd/user/
+
+systemctl --user daemon-reload
+systemctl --user enable --now github-repos-sync.timer
+
+echo "Installed and enabled systemd timer for github repos file sync."
+echo ""
+echo "To configure, create:"
+echo "  ~/.config/github-repos-sync/secrets.env  (with GITHUB_TOKEN=your_token)"
+echo "  ~/.config/github-repos-sync/env          (with GITHUB_REPOS_FILE=~/repos.txt)"
+echo "  Your repos file (one repo per line: owner/repo or https://github.com/owner/repo)"
